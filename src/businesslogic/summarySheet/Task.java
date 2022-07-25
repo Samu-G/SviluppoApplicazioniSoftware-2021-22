@@ -32,6 +32,17 @@ public class Task implements Comparable<Task> {
 
     /* constructors */
 
+    public Task(String name, boolean completed, int quantity, int estimatedTime, boolean ready, User cooker) {
+        this.name = name;
+        this.completed = completed;
+        this.quantity = quantity;
+        this.estimatedTime = estimatedTime;
+        this.ready = ready;
+        this.cooker = cooker;
+        this.procedures = new ArrayList<>();
+        this.shifts = new ArrayList<>();
+    }
+
     public Task(int id, String name, boolean completed, int quantity, int estimatedTime, boolean ready, User cooker) {
         this.id = id;
         this.name = name;

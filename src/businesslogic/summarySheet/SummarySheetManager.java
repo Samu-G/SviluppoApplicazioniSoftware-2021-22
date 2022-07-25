@@ -28,6 +28,10 @@ public class SummarySheetManager {
 
         User user = CatERing.getInstance().getUserManager().getCurrentUser();
 
+        if (!user.isChef()) {
+            throw new UseCaseLogicException();
+        }
+
         EventInfo eventInfoCorrelated = CatERing.getInstance().getEventManager().getEventInfoByService(serviceCorrelated);
 
         if (eventInfoCorrelated == null || eventInfoCorrelated.getOrganizer().getId() != user.getId()) {
@@ -42,7 +46,13 @@ public class SummarySheetManager {
     }
 
     public void deleteSummarySheet(SummarySheet sumSheet) throws UseCaseLogicException {
-        if(sumSheet == null || sumSheet.isLocked() || sumSheet.getOwner() != CatERing.getInstance().getUserManager().getCurrentUser()) {
+        User user = CatERing.getInstance().getUserManager().getCurrentUser();
+
+        if (!user.isChef()) {
+            throw new UseCaseLogicException();
+        }
+
+        if (sumSheet == null || sumSheet.isLocked() || sumSheet.getOwner() != user) {
             throw new UseCaseLogicException();
         }
 
@@ -50,7 +60,13 @@ public class SummarySheetManager {
     }
 
     public void lockSummarySheet(SummarySheet sumSheet) throws UseCaseLogicException {
-        if(sumSheet == null || sumSheet.isLocked() || sumSheet.getOwner() != CatERing.getInstance().getUserManager().getCurrentUser()) {
+        User user = CatERing.getInstance().getUserManager().getCurrentUser();
+
+        if (!user.isChef()) {
+            throw new UseCaseLogicException();
+        }
+
+        if (sumSheet == null || sumSheet.isLocked() || sumSheet.getOwner() != user) {
             throw new UseCaseLogicException();
         }
 
@@ -58,19 +74,25 @@ public class SummarySheetManager {
     }
 
     public void unlockSummarySheet(SummarySheet sumSheet) throws UseCaseLogicException {
-        if(sumSheet == null || sumSheet.getOwner() != CatERing.getInstance().getUserManager().getCurrentUser()) {
+        User user = CatERing.getInstance().getUserManager().getCurrentUser();
+
+        if (!user.isChef()) {
+            throw new UseCaseLogicException();
+        }
+
+        if (sumSheet == null || sumSheet.getOwner() != user) {
             throw new UseCaseLogicException();
         }
 
         this.notifySummarySheetUnlocked(sumSheet);
     }
 
-    public void openSummarySheet(ServiceInfo service) throws UseCaseLogicException {
-        if(service == null) {
+    public void openSummarySheet(ServiceInfo serviceCorrelated) throws UseCaseLogicException {
+        if (serviceCorrelated == null) {
             throw new UseCaseLogicException();
         }
 
-        this.notifyOpenSummarySheet(service);
+        this.notifyOpenSummarySheet(serviceCorrelated);
     }
 
     public void setCurrentSummarySheet(SummarySheet sumSheet) throws UseCaseLogicException {
@@ -90,11 +112,17 @@ public class SummarySheetManager {
     }
 
     public Task createTask(String name, boolean completed, int quantity, int estimatedTime, boolean ready, User cooker) throws UseCaseLogicException {
-        if ((currentSummarySheet == null) || currentSummarySheet.isLocked() || currentSummarySheet.getOwner() != CatERing.getInstance().getUserManager().getCurrentUser()) {
+        User user = CatERing.getInstance().getUserManager().getCurrentUser();
+
+        if (!user.isChef()) {
             throw new UseCaseLogicException();
         }
 
-        Task t = new Task(0, name, completed, quantity, estimatedTime, ready, cooker);
+        if ((currentSummarySheet == null) || currentSummarySheet.isLocked() || currentSummarySheet.getOwner() != user) {
+            throw new UseCaseLogicException();
+        }
+
+        Task t = new Task(name, completed, quantity, estimatedTime, ready, cooker);
 
         this.notifyTaskAdded(this.currentSummarySheet, t);
 
@@ -104,7 +132,13 @@ public class SummarySheetManager {
     }
 
     public void deleteTask(Task t) throws UseCaseLogicException {
-        if ((currentSummarySheet == null) || currentSummarySheet.isLocked()) {
+        User user = CatERing.getInstance().getUserManager().getCurrentUser();
+
+        if (!user.isChef()) {
+            throw new UseCaseLogicException();
+        }
+
+        if ((currentSummarySheet == null) || currentSummarySheet.isLocked() || currentSummarySheet.getOwner() != user) {
             throw new UseCaseLogicException();
         }
 
@@ -112,11 +146,31 @@ public class SummarySheetManager {
 
         this.updateTasks(this.currentSummarySheet);
 
-        this.currentSummarySheet.setTaskInEdit(t);
+        this.currentSummarySheet.selectTaskToEdit(t);
+    }
+
+    public void arrangeTasks() throws UseCaseLogicException {
+        if (currentSummarySheet == null || currentSummarySheet.isLocked()) {
+            throw new UseCaseLogicException();
+        }
+
+        currentSummarySheet.sortTask();
     }
 
     public Procedure createProcedure(String name, String instruction, User owner, String procedureType) throws UseCaseLogicException {
-        if (currentSummarySheet == null || currentSummarySheet.isLocked() || currentSummarySheet.getOwner() != CatERing.getInstance().getUserManager().getCurrentUser() || currentSummarySheet.getTaskInEdit() == null) {
+        User user = CatERing.getInstance().getUserManager().getCurrentUser();
+
+        if (!user.isChef()) {
+            throw new UseCaseLogicException();
+        }
+
+        if (currentSummarySheet == null || currentSummarySheet.isLocked() || currentSummarySheet.getOwner() != user) {
+            throw new UseCaseLogicException();
+        }
+
+        Task taskInEdit = currentSummarySheet.getTaskInEdit();
+
+        if (taskInEdit == null) {
             throw new UseCaseLogicException();
         }
 
@@ -124,7 +178,7 @@ public class SummarySheetManager {
 
         this.notifyProcedureAdded(this.currentSummarySheet, p);
 
-        this.updateProcedure(this.currentSummarySheet.getTaskInEdit());
+        this.updateProcedure(taskInEdit);
 
         return p;
     }
@@ -161,7 +215,7 @@ public class SummarySheetManager {
             throw new UseCaseLogicException();
         }
 
-        this.currentSummarySheet.setTaskInEdit(t);
+        this.currentSummarySheet.selectTaskToEdit(t);
     }
 
     public void updateTasks(SummarySheet summarySheet) {
@@ -193,72 +247,143 @@ public class SummarySheetManager {
         return this.currentSummarySheet.getTaskInEdit();
     }
 
-    public void addShiftToTaskInEdit(Shift s) throws UseCaseLogicException {
-        if (currentSummarySheet == null || currentSummarySheet.getTaskInEdit() == null || s == null) {
+    public void assignShiftToTaskInEdit(Shift shift) throws UseCaseLogicException {
+        User user = CatERing.getInstance().getUserManager().getCurrentUser();
+
+        if (!user.isChef()) {
             throw new UseCaseLogicException();
         }
 
-        this.notifyShiftAdded(this.currentSummarySheet.getTaskInEdit(), s);
+        if (currentSummarySheet == null || shift == null) {
+            throw new UseCaseLogicException();
+        }
 
-        this.updateShifts();
+        Task taskInEdit = currentSummarySheet.getTaskInEdit();
+
+        if (taskInEdit == null) {
+            throw new UseCaseLogicException();
+        }
+
+        this.notifyShiftAdded(taskInEdit, shift);
+
+        this.updateShifts(taskInEdit);
     }
 
 
     public void setCookerToTaskInEdit(User cooker) throws UseCaseLogicException {
-        if (currentSummarySheet == null || currentSummarySheet.getTaskInEdit() == null) {
+        User user = CatERing.getInstance().getUserManager().getCurrentUser();
+
+        if (!user.isChef()) {
             throw new UseCaseLogicException();
         }
 
-        this.notifyCookerUpdated(this.currentSummarySheet.getTaskInEdit(), cooker);
+        if (currentSummarySheet == null || cooker == null) {
+            throw new UseCaseLogicException();
+        }
+
+        Task taskInEdit = currentSummarySheet.getTaskInEdit();
+
+        if (taskInEdit == null) {
+            throw new UseCaseLogicException();
+        }
+
+        this.notifyCookerUpdated(taskInEdit, cooker);
 
         this.updateCooker(cooker);
     }
 
 
     public void setQuantityToTaskInEdit(int quantity) throws UseCaseLogicException {
-        if (currentSummarySheet == null || currentSummarySheet.getTaskInEdit() == null || quantity < 0) {
+        User user = CatERing.getInstance().getUserManager().getCurrentUser();
+
+        if (!user.isChef()) {
             throw new UseCaseLogicException();
         }
 
-        this.notifyQuantityUpdated(this.currentSummarySheet.getTaskInEdit(), quantity);
+        if (currentSummarySheet == null || quantity < 0) {
+            throw new UseCaseLogicException();
+        }
+
+        Task taskInEdit = currentSummarySheet.getTaskInEdit();
+
+        if (taskInEdit == null) {
+            throw new UseCaseLogicException();
+        }
+
+        this.notifyQuantityUpdated(taskInEdit, quantity);
 
         this.updateQuantity(quantity);
     }
 
 
     public void setEstimatedTimeToTaskInEdit(int estimatedTime) throws UseCaseLogicException {
-        if (currentSummarySheet == null || currentSummarySheet.getTaskInEdit() == null || estimatedTime < 0) {
+        User user = CatERing.getInstance().getUserManager().getCurrentUser();
+
+        if (!user.isChef()) {
             throw new UseCaseLogicException();
         }
 
-        this.notifyEstimatedTimeEdited(this.currentSummarySheet.getTaskInEdit(), estimatedTime);
+        if (currentSummarySheet == null || estimatedTime < 0) {
+            throw new UseCaseLogicException();
+        }
+
+        Task taskInEdit = currentSummarySheet.getTaskInEdit();
+
+        if (taskInEdit == null) {
+            throw new UseCaseLogicException();
+        }
+
+        this.notifyEstimatedTimeEdited(taskInEdit, estimatedTime);
 
         this.updateEstimatedTime(estimatedTime);
     }
 
     public void setReadyToTaskInEdit(boolean isReady) throws UseCaseLogicException {
-        if (currentSummarySheet == null || currentSummarySheet.getTaskInEdit() == null) {
+        User user = CatERing.getInstance().getUserManager().getCurrentUser();
+
+        if (!user.isChef()) {
             throw new UseCaseLogicException();
         }
 
-        this.notifyTaskReadyEdited(this.currentSummarySheet.getTaskInEdit(), isReady);
+        if (currentSummarySheet == null) {
+            throw new UseCaseLogicException();
+        }
+
+        Task taskInEdit = currentSummarySheet.getTaskInEdit();
+
+        if (taskInEdit == null) {
+            throw new UseCaseLogicException();
+        }
+
+        this.notifyTaskReadyEdited(taskInEdit, isReady);
 
         this.updateTaskReady(isReady);
-
     }
 
     public void setCompletedToTaskInEdit(boolean isCompleted) throws UseCaseLogicException {
-        if (currentSummarySheet == null || currentSummarySheet.getTaskInEdit() == null) {
+        User user = CatERing.getInstance().getUserManager().getCurrentUser();
+
+        if (!user.isChef()) {
             throw new UseCaseLogicException();
         }
 
-        this.notifyTaskCompletedEdited(this.currentSummarySheet.getTaskInEdit(), isCompleted);
+        if (currentSummarySheet == null) {
+            throw new UseCaseLogicException();
+        }
+
+        Task taskInEdit = this.currentSummarySheet.getTaskInEdit();
+
+        if (taskInEdit == null) {
+            throw new UseCaseLogicException();
+        }
+
+        this.notifyTaskCompletedEdited(taskInEdit, isCompleted);
 
         this.updateTaskCompleted(isCompleted);
     }
 
-    private void updateShifts() {
-        int taskInEditId = currentSummarySheet.getTaskInEdit().getId();
+    private void updateShifts(Task task) {
+        int taskInEditId = task.getId();
 
         String query = "SELECT * FROM taskshifts WHERE task_id = '" + taskInEditId + "'";
 
@@ -274,10 +399,10 @@ public class SummarySheetManager {
             }
         });
 
-        this.currentSummarySheet.getTaskInEdit().getShifts().clear();
+        task.getShifts().clear();
 
         for (int i : shiftsId) {
-            this.currentSummarySheet.getTaskInEdit().addShift(Shift.loadShiftById(i));
+            task.addShift(Shift.loadShiftById(i));
         }
     }
 
@@ -327,9 +452,9 @@ public class SummarySheetManager {
         }
     }
 
-    private void notifyOpenSummarySheet(ServiceInfo service) {
+    private void notifyOpenSummarySheet(ServiceInfo serviceCorrelated) {
         for (SummarySheetEventReciever er : this.eventReceivers) {
-            er.updateOpenSummarySheet(service);
+            er.updateOpenSummarySheet(serviceCorrelated);
         }
     }
 
@@ -357,9 +482,9 @@ public class SummarySheetManager {
         }
     }
 
-    private void notifyProcedureAdded(SummarySheet sumSheet, Procedure p) {
+    private void notifyProcedureAdded(SummarySheet currentSummarySheet, Procedure p) {
         for (SummarySheetEventReciever er : this.eventReceivers) {
-            er.updateProcedureAdded(sumSheet, p);
+            er.updateProcedureAdded(currentSummarySheet, p);
         }
     }
 

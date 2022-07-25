@@ -17,7 +17,7 @@ public class ShiftManager {
         this.eventReceivers = new ArrayList<>();
     }
 
-    public static ArrayList<Shift> getShiftsBoard() throws UseCaseLogicException {
+    public ArrayList<Shift> getShiftsBoard() throws UseCaseLogicException {
         ArrayList<Shift> shiftsBoard = new ArrayList<>();
 
         String query = "SELECT * FROM shifts";

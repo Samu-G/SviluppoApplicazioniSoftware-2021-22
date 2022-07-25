@@ -4,6 +4,7 @@ import businesslogic.CatERing;
 import businesslogic.UseCaseLogicException;
 import businesslogic.summarySheet.SummarySheet;
 import businesslogic.summarySheet.Task;
+import businesslogic.user.User;
 import persistence.PersistenceManager;
 
 import java.util.ArrayList;
@@ -46,15 +47,29 @@ public class ProcedureManager {
     // OPERATION METHOD
 
     public void deleteProcedure(Procedure p) throws UseCaseLogicException {
+        User user = CatERing.getInstance().getUserManager().getCurrentUser();
+
+        if(!user.isChef()) {
+            throw new UseCaseLogicException();
+        }
+
         SummarySheet currentSummarySheet = CatERing.getInstance().getSummarySheetManager().getCurrentSummarySheet();
 
-        if ((currentSummarySheet == null) || currentSummarySheet.isLocked() || currentSummarySheet.getTasks().isEmpty()) {
+        if(currentSummarySheet == null || currentSummarySheet.getOwner() != user || currentSummarySheet.isLocked()) {
+            throw new UseCaseLogicException();
+        }
+
+        ArrayList<Task> tasks = currentSummarySheet.getTasks();
+
+        if(tasks.isEmpty()) {
             throw new UseCaseLogicException();
         }
 
         this.notifyProcedureDeleted(p);
 
-        CatERing.getInstance().getSummarySheetManager().updateProcedure(currentSummarySheet.getTaskInEdit());
+        Task taskInEdit = currentSummarySheet.getTaskInEdit();
+
+        CatERing.getInstance().getSummarySheetManager().updateProcedure(taskInEdit);
     }
 
     // GETTER AND SETTER

@@ -2,7 +2,6 @@ import businesslogic.CatERing;
 import businesslogic.UseCaseLogicException;
 import businesslogic.procedure.Procedure;
 import businesslogic.shift.Shift;
-import businesslogic.shift.ShiftManager;
 import businesslogic.summarySheet.SummarySheet;
 import businesslogic.summarySheet.Task;
 import businesslogic.user.User;
@@ -35,17 +34,17 @@ public class TestCatERingKitchen {
             System.out.println(CatERing.getInstance().getSummarySheetManager().getSelectedTask());
 
             System.out.println("\nTEST SORT TASK");
-            CatERing.getInstance().getSummarySheetManager().getCurrentSummarySheet().sortTask();
+            CatERing.getInstance().getSummarySheetManager().arrangeTasks();
             System.out.println(CatERing.getInstance().getSummarySheetManager().getCurrentSummarySheet().getTasks());
 
             System.out.println("\nTEST GET SHIFT BOARD");
-            ArrayList<Shift> shiftBoard = ShiftManager.getShiftsBoard();
+            ArrayList<Shift> shiftBoard = CatERing.getInstance().getShiftManager().getShiftsBoard();
             System.out.println(shiftBoard);
 
             System.out.println("\nTEST ASSIGN SHIFT TO TASK");
             CatERing.getInstance().getSummarySheetManager().setSelectedTask(thirdNewTask);
-            CatERing.getInstance().getSummarySheetManager().addShiftToTaskInEdit(ShiftManager.getShiftsBoard().get(0));
-            CatERing.getInstance().getSummarySheetManager().addShiftToTaskInEdit(ShiftManager.getShiftsBoard().get(1));
+            CatERing.getInstance().getSummarySheetManager().assignShiftToTaskInEdit(CatERing.getInstance().getShiftManager().getShiftsBoard().get(0));
+            CatERing.getInstance().getSummarySheetManager().assignShiftToTaskInEdit(CatERing.getInstance().getShiftManager().getShiftsBoard().get(1));
             System.out.println(CatERing.getInstance().getSummarySheetManager().getSelectedTask());
 
         } catch (UseCaseLogicException e) {

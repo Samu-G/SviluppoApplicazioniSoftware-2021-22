@@ -18,7 +18,7 @@ public class TestCatERingKitchen2a {
             System.out.println(summarySheet);
 
             System.out.println("\nTEST SELECT TASK");
-            CatERing.getInstance().getSummarySheetManager().getCurrentSummarySheet().setTaskInEdit(firstNewTask);
+            CatERing.getInstance().getSummarySheetManager().getCurrentSummarySheet().selectTaskToEdit(firstNewTask);
             System.out.println(CatERing.getInstance().getSummarySheetManager().getCurrentSummarySheet().getTaskInEdit());
 
         } catch (UseCaseLogicException e) {

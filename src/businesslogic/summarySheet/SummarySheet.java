@@ -27,8 +27,6 @@ public class SummarySheet {
 
     private ServiceInfo serviceCorrelated;
 
-    private boolean inEdit;
-
     public SummarySheet() {
         this.id = -1;
         this.name = "";
@@ -128,7 +126,7 @@ public class SummarySheet {
         this.name = name;
     }
 
-    public void setTaskInEdit(Task task) {
+    public void selectTaskToEdit(Task task) {
         boolean found = false;
 
         for (Task value : this.tasks) {
@@ -153,7 +151,6 @@ public class SummarySheet {
     }
 
     public void setInEdit(boolean inEdit) {
-        this.inEdit = inEdit;
     }
 
     public void setLocked(boolean locked) {
@@ -206,10 +203,6 @@ public class SummarySheet {
                 result.setId(rs.getInt("id"));
             }
         });
-
-        if (result.getId() == -1) {
-            return null;
-        }
 
         return result;
     }

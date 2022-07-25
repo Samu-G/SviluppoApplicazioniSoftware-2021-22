@@ -18,7 +18,7 @@ public class TestCatERingKitchen2b {
             System.out.println(summarySheet);
 
             System.out.println("\nSELECTED TASK");
-            CatERing.getInstance().getSummarySheetManager().getCurrentSummarySheet().setTaskInEdit(firstNewTask);
+            CatERing.getInstance().getSummarySheetManager().getCurrentSummarySheet().selectTaskToEdit(firstNewTask);
             System.out.println(CatERing.getInstance().getSummarySheetManager().getCurrentSummarySheet().getTaskInEdit());
 
             System.out.println("\nTEST SET TASK DONE");
