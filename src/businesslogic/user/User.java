@@ -17,6 +17,8 @@ public class User {
         return shifts.size() <= 5;
     }
 
+
+
     public enum Role {SERVIZIO, CUOCO, CHEF, ORGANIZZATORE}
 
     private int id;
@@ -33,6 +35,10 @@ public class User {
 
     public boolean isChef() {
         return !roles.contains(Role.CHEF);
+    }
+
+    public boolean isCooker() {
+        return !roles.contains(Role.CUOCO);
     }
 
     public void addShift(Shift shift) {

@@ -20,7 +20,9 @@ public interface SummarySheetEventReciever {
 
     void updateTaskDeleted(SummarySheet sumSheet, Task t);
 
-    void updateProcedureAdded(SummarySheet sumSheet, Procedure p);
+    void updateProcedureAdded(Task t, Procedure p);
+
+    void updateProcedureRemoved(Task t, Procedure p);
 
     void updateShiftAdded(Task t, Shift s);
 
@@ -33,4 +35,5 @@ public interface SummarySheetEventReciever {
     void updateTaskReady(Task t, boolean isReady);
 
     void updateTaskCompleted(Task sumSheet, boolean t);
+
 }

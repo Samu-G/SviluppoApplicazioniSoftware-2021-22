@@ -167,6 +167,35 @@ public class Task implements Comparable<Task> {
     }
 
 
+    public static void addNewProcedureToTask(Task t, Procedure p) {
+        if (t != null && p != null) {
+            int procedureId = p.getId();
+
+            int taskId = t.getId();
+
+            String insert = "UPDATE procedures SET task_id = '" + taskId + "' WHERE id = '" + procedureId + "'";
+
+            PersistenceManager.executeUpdate(insert);
+
+            p.setId(PersistenceManager.getLastId());
+        }
+    }
+
+    public static void removeProcedureToTask(Task t, Procedure p) {
+        if (t != null && p != null) {
+            int procedureId = p.getId();
+
+            int taskId = t.getId();
+
+            String insert = "UPDATE procedures SET task_id = NULL WHERE task_id = '" + taskId + "' AND id = '" + procedureId + "'";
+
+            PersistenceManager.executeUpdate(insert);
+
+            p.setId(PersistenceManager.getLastId());
+
+        }
+    }
+
     public static void deleteTask(SummarySheet sumSheet, Task t) {
         int sumSheetId = sumSheet.getId();
 

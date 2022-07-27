@@ -1,6 +1,10 @@
 package businesslogic.procedure;
 
+import businesslogic.CatERing;
 import businesslogic.user.User;
+import persistence.PersistenceManager;
+
+import java.util.ArrayList;
 
 public class Procedure {
 
@@ -20,6 +24,8 @@ public class Procedure {
 
     private String procedureType;
 
+    private ArrayList<Ingredient> ingredients;
+    
     /* constructors */
 
     public Procedure(String name, String instruction, User owner) {
@@ -41,14 +47,13 @@ public class Procedure {
             case 1 -> this.procedureType = "Recipe";
             case 2 -> this.procedureType = "Preparation";
         }
-
     }
 
-    public Procedure(String name, String instruction, User owner, String state) {
+    public Procedure(String name, String instruction, User owner, String procedureType) {
         this.name = name;
         this.instruction = instruction;
         this.owner = owner;
-        this.procedureType = state;
+        this.procedureType = procedureType;
     }
 
     public int getId() {
@@ -110,6 +115,39 @@ public class Procedure {
     public void setProcedureType(String procedureType) {
         this.procedureType = procedureType;
     }
+
+    /* Persistence */
+
+    public static void createProcedure(Procedure p) {
+        String procedureName = p.getName();
+
+        String instruction = p.getInstruction();
+
+        int procedureType = 0;
+
+        switch (p.getProcedureType()) {
+            case "Recipe" -> procedureType = 1;
+            case "Preparation" -> procedureType = 2;
+        }
+
+        int userId = CatERing.getInstance().getUserManager().getCurrentUser().getId();
+
+        String insert = "INSERT procedures (name, instruction, owner_id, procedure_type) " +
+                "VALUES ('" + procedureName + "', '" + instruction + "' , '" + userId + "', '" + procedureType + "')";
+
+        PersistenceManager.executeUpdate(insert);
+
+        p.setId(PersistenceManager.getLastId());
+    }
+
+    public static void removeProcedure(Procedure p) {
+        int procedureId = p.getId();
+
+        String query = "DELETE FROM procedures WHERE id = '" + procedureId + "'";
+
+        PersistenceManager.executeUpdate(query);
+    }
+
 
     @Override
     public String toString() {

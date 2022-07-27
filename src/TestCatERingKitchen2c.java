@@ -20,9 +20,9 @@ public class TestCatERingKitchen2c {
 
             System.out.println("\nCREATE PROCEDURE");
             CatERing.getInstance().getSummarySheetManager().setSelectedTask(firstNewTask);
-            Procedure newProcedureRecipe = CatERing.getInstance().getSummarySheetManager().createProcedure("Nuova ricetta di cucina",
+            Procedure newProcedureRecipe = CatERing.getInstance().getProcedureManager().createProcedure("Nuova ricetta di cucina",
                     "Taglia il porro, scalda olio, metti il porro a cuocere a fuoco basso per 10 minuti coprendo il recipiente", CatERing.getInstance().getUserManager().getCurrentUser(), "Recipe");
-            Procedure newProcedurePreparation = CatERing.getInstance().getSummarySheetManager().createProcedure("Nuova preparazione di cucina",
+            Procedure newProcedurePreparation = CatERing.getInstance().getProcedureManager().createProcedure("Nuova preparazione di cucina",
                     "Porta in ebollizione mezzo litro di acqua, prepara il riso, tosta il riso, sfiamma con vino bianco, aggiungi acqua", CatERing.getInstance().getUserManager().getCurrentUser(), "Preparation");
             System.out.println(summarySheet);
 

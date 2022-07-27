@@ -2,7 +2,6 @@ package persistence;
 
 import businesslogic.event.ServiceInfo;
 import businesslogic.procedure.Procedure;
-import businesslogic.procedure.ProcedureManager;
 import businesslogic.shift.Shift;
 import businesslogic.summarySheet.SummarySheet;
 import businesslogic.summarySheet.SummarySheetEventReciever;
@@ -47,8 +46,13 @@ public class PersistenceSummarySheet implements SummarySheetEventReciever {
     }
 
     @Override
-    public void updateProcedureAdded(SummarySheet sumSheet, Procedure p) {
-        ProcedureManager.addNewProcedureToTask(sumSheet, p);
+    public void updateProcedureAdded(Task t, Procedure p) {
+        Task.addNewProcedureToTask(t, p);
+    }
+
+    @Override
+    public void updateProcedureRemoved(Task t, Procedure p) {
+        Task.removeProcedureToTask(t, p);
     }
 
     @Override

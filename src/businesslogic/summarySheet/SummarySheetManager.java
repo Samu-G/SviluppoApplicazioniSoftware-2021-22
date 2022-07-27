@@ -111,6 +111,77 @@ public class SummarySheetManager {
         }
     }
 
+    public void addProcedure(Procedure procedure) throws UseCaseLogicException {
+        User user = CatERing.getInstance().getUserManager().getCurrentUser();
+
+        if (!user.isChef()) {
+            throw new UseCaseLogicException();
+        }
+
+        if (currentSummarySheet == null || currentSummarySheet.isLocked() || currentSummarySheet.getOwner() != user) {
+            throw new UseCaseLogicException();
+        }
+
+        Task taskInEdit = currentSummarySheet.getTaskInEdit();
+
+        if (taskInEdit == null) {
+            throw new UseCaseLogicException();
+        }
+
+        this.notifyProcedureAdded(taskInEdit, procedure);
+
+        this.updateProcedure(taskInEdit);
+    }
+
+    public void removeProcedure(Procedure procedure) throws UseCaseLogicException {
+        User user = CatERing.getInstance().getUserManager().getCurrentUser();
+
+        if (!user.isChef()) {
+            throw new UseCaseLogicException();
+        }
+
+        if (currentSummarySheet == null || currentSummarySheet.getOwner() != user || currentSummarySheet.isLocked()) {
+            throw new UseCaseLogicException();
+        }
+
+        Task taskInEdit = currentSummarySheet.getTaskInEdit();
+
+        if (taskInEdit == null) {
+            throw new UseCaseLogicException();
+        }
+
+        this.notifyProcedureRemoved(taskInEdit, procedure);
+
+        this.updateProcedure(taskInEdit);
+    }
+
+    public void updateProcedure(Task taskInEdit) {
+        int taskInEditId = taskInEdit.getId();
+
+        String query = "SELECT * FROM procedures WHERE task_id = '" + taskInEditId + "'";
+
+        taskInEdit.getProcedures().clear();
+
+        PersistenceManager.executeQuery(query, new ResultHandler() {
+            @Override
+            public void handle(ResultSet rs) throws SQLException {
+
+                do {
+                    taskInEdit.addProcedure(new Procedure(
+                            rs.getInt("id"),
+                            rs.getString("name"),
+                            rs.getString("instruction"),
+                            rs.getString("tag"),
+                            rs.getInt("time"),
+                            rs.getInt("quantity"),
+                            User.loadUserById(rs.getInt("owner_id")),
+                            rs.getInt("procedure_type")
+                    ));
+                } while (rs.next());
+            }
+        });
+    }
+
     public Task createTask(String name, boolean completed, int quantity, int estimatedTime, boolean ready, User cooker) throws UseCaseLogicException {
         User user = CatERing.getInstance().getUserManager().getCurrentUser();
 
@@ -155,59 +226,6 @@ public class SummarySheetManager {
         }
 
         currentSummarySheet.sortTask();
-    }
-
-    public Procedure createProcedure(String name, String instruction, User owner, String procedureType) throws UseCaseLogicException {
-        User user = CatERing.getInstance().getUserManager().getCurrentUser();
-
-        if (!user.isChef()) {
-            throw new UseCaseLogicException();
-        }
-
-        if (currentSummarySheet == null || currentSummarySheet.isLocked() || currentSummarySheet.getOwner() != user) {
-            throw new UseCaseLogicException();
-        }
-
-        Task taskInEdit = currentSummarySheet.getTaskInEdit();
-
-        if (taskInEdit == null) {
-            throw new UseCaseLogicException();
-        }
-
-        Procedure p = new Procedure(name, instruction, owner, procedureType);
-
-        this.notifyProcedureAdded(this.currentSummarySheet, p);
-
-        this.updateProcedure(taskInEdit);
-
-        return p;
-    }
-
-    public void updateProcedure(Task taskInEdit) {
-        int taskInEditId = taskInEdit.getId();
-
-        String query = "SELECT * FROM procedures WHERE task_id = '" + taskInEditId + "'";
-
-        taskInEdit.getProcedures().clear();
-
-        PersistenceManager.executeQuery(query, new ResultHandler() {
-            @Override
-            public void handle(ResultSet rs) throws SQLException {
-
-                do {
-                    taskInEdit.addProcedure(new Procedure(
-                            rs.getInt("id"),
-                            rs.getString("name"),
-                            rs.getString("instruction"),
-                            rs.getString("tag"),
-                            rs.getInt("time"),
-                            rs.getInt("quantity"),
-                            User.loadUserById(rs.getInt("owner_id")),
-                            rs.getInt("procedure_type")
-                    ));
-                } while (rs.next());
-            }
-        });
     }
 
     public void setSelectedTask(Task t) throws UseCaseLogicException {
@@ -482,11 +500,18 @@ public class SummarySheetManager {
         }
     }
 
-    private void notifyProcedureAdded(SummarySheet currentSummarySheet, Procedure p) {
+    private void notifyProcedureAdded(Task taskInEdit, Procedure p) {
         for (SummarySheetEventReciever er : this.eventReceivers) {
-            er.updateProcedureAdded(currentSummarySheet, p);
+            er.updateProcedureAdded(taskInEdit, p);
         }
     }
+
+    private void notifyProcedureRemoved(Task taskInEdit, Procedure p) {
+        for (SummarySheetEventReciever er : this.eventReceivers) {
+            er.updateProcedureRemoved(taskInEdit, p);
+        }
+    }
+
 
     private void notifyShiftAdded(Task t, Shift s) {
         for (SummarySheetEventReciever er : this.eventReceivers) {

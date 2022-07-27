@@ -1,5 +1,6 @@
 package businesslogic.recipe;
 
+import businesslogic.procedure.Procedure;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
@@ -12,4 +13,8 @@ public class RecipeManager {
     public ObservableList<Recipe> getRecipes() {
         return FXCollections.unmodifiableObservableList(Recipe.getAllRecipes());
     }
+
+    public void addRecipe(Procedure p) {
+    }
+
 }
